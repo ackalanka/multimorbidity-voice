@@ -1,88 +1,118 @@
-- This project is designed to work with **Python 3.12** only.
+- This project is designed to work with **Python 3.12** only.
 - Running it with any other version of Python may cause compatibility issues with dependencies.
+# Voice Biomarker Extraction Pipeline
 
-### INSTALLATION
+A robust audio processing pipeline for extracting Mel-Frequency Cepstral Coefficients (MFCCs) from voice recordings, optimized for medical machine learning research.
 
-Clone the repository
-```bash 
-git clone https://github.com/ackalanka/multimorbidity-voice.git
-```
+## Key Features
 
-Create a venv using python 3.12
-```bash
-python3.12 -m venv venv
-```
+- **Advanced Audio Preprocessing**  
+  Noise reduction, spectral normalization, and adaptive voice activity detection
+- **Comprehensive MFCC Extraction**  
+  13 coefficients with 10 statistical measures per coefficient
+- **Temporal Feature Analysis**  
+  Delta and delta-delta coefficients for voice dynamics
+- **Quality Control Metrics**  
+  SNR estimation, duration tracking, and processing validation
+- **Scalable Architecture**  
+  Parallel processing for large datasets
+- **Research-Ready Output**  
+  CSV format with embedded metadata for longitudinal studies
 
-Activate venv
-```bash
-.\venv\Scripts\activate
-```
-  
-Install requirements
+## Technical Specifications
+
+| Component              | Details                                                                 |
+|------------------------|-------------------------------------------------------------------------|
+| MFCC Parameters        | 13 coefficients, 128 mel bands, 50-8000Hz range                        |
+| Preprocessing          | Noise reduction (spectral gating), pre-emphasis (0.97), peak normalization |
+| Temporal Features      | Δ (delta) and Δ² (delta-delta) coefficients                            |
+| Statistical Features   | Mean, variance, median, min/max, range, std, kurtosis, skewness, ZCR  |
+| Output Format          | CSV with 143 features per recording + metadata columns                 |
+
+## Installation
+
 ```bash
 pip install -r requirements.txt
 ```
 
-Navigate to scripts\ and run mfcc81.py
+## Usage
+
+1. Organize WAV files:
 ```bash
-cd .\venv\Scripts\activate
-python mfcc81.py
+input_dir/
+├── patient_001_2024-01-15.wav
+├── patient_002_2024-02-20.wav
+└── ...
 ```
 
-### Breakdown of the script mfcc.py
+2. Run feature extraction:
+```bash
+python mfcc_extractor.py
+```
 
-The script uses Mel Frequency Cepstral Coefficients (MFCCs) to extract 81 voice features. MFCCs capture the most important features of human speech that are useful for analysis. Instead of analyzing raw audio, MFCCs convert voice signals into numerical values that represent speech patterns. They are widely used in speech recognition (Siri, Google Assistant) and medical voice analysis (Parkinson’s, stress detection).
+3. Output CSV contains:
+```csv
+filename,patient_id,recording_date,mfcc_01_mean,...,delta2_mean,snr_db,...
+```
 
-##### **1. Audio Processing Metrics**
-Preprocessing of the raw audio by mfcc81.py
-- **Sample Rate**: `16000 Hz` (resamples audio to 16 kHz for consistency).
-- **Silence Trimming**: `top_db=20` (removes leading/trailing silence below -20 dB).
-- **Noise Reduction**: Uses the first `0.5 seconds` of audio as a noise profile to clean recordings.
+## Audio Preprocessing Pipeline
 
-##### **2. MFCC Feature Extraction Metrics**
-mfcc81.py calculates Mel-Frequency Cepstral Coefficients as follows:
+1. **Noise Reduction**  
+   Spectral gating using first 500ms as noise profile (aggression=1.5)
+   
+2. **Voice Activity Detection**  
+   Conservative trimming (-25dB threshold) with duration validation
 
-- **Number of Coefficients**: `13` (standard for speech/voice analysis).
-- **Frame Size**: `25 ms` (window length for spectral analysis).
-- **Hop Length**: `10 ms` (step size between frames).
-- **Mel Filters**: `40` (frequency bands spaced on the Mel scale, approximating human hearing).
-- **Statistics per Coefficient**: For each of the 13 coefficients, the script calculates 6 statistical measures:
-  1. **Mean** (average value)
-  2. **Variance** (spread of values)
-  3. **Median** (middle value)
-  4. **Max** (highest value)
-  5. **Min** (lowest value)
-  6. **Range** (`Max - Min`)
+3. **Spectral Normalization**  
+   Pre-emphasis filter → Peak normalization → Mel spectrogram conversion
 
-##### **3. Filename Metadata Parsing**
-mfcc81.py extracts structured metadata from filenames like `EU150-001-14112023-17-56.wav` into: 
-- **Cohort**: `EU150-001` (first two segments).
-- **Participant ID**: `001` (second segment).
-- **Date**: `14 November 2023` (parsed from `14112023`).
-- **Time**: `17:56` (parsed from `17-56`).
+4. **MFCC Extraction**  
+   13 coefficients from 128 mel bands (50-8000Hz)
 
-##### **4. Output **
-The final CSV (`mfcc_voice_features.csv`) contains:
-- **81 Features**:  
-  `13 MFCC coefficients × 6 statistics = 78 features` + `3 padded zeros` (to reach 81, as in the original study).
-- **Metadata Columns**:  
-  `cohort`, `participant_id`, `date`, `time`.
+5. **Feature Engineering**  
+   10 statistical measures + temporal derivatives per coefficient
 
-##### **Example Output**
-| cohort    | participant_id | date       | time  | feature_001 | ... | feature_081 |
-| --------- | -------------- | ---------- | ----- | ----------- | --- | ----------- |
-| EU150-001 | 001            | 2023-11-14 | 17:56 | 0.45        | ... | -1.2        |
+## Why This Pipeline Excels for ML
 
-##### **Why These Metrics?**
-- **MFCCs**: Standard for voice/speech analysis (captures timbre/texture).
-- **Statistics**: Quantify how coefficients change over time (e.g., high variance = unstable voice).
-- **Longitudinal Metadata**: Enables tracking of voice changes before/after diagnosis.
+1. **Rich Feature Representation**  
+   - 143 engineered features capture both spectral and temporal patterns
+   - Kurtosis/skewness detect non-Gaussian voice characteristics
+   - ZCR (Zero Crossing Rate) enhances time-domain analysis
 
-##### **Key Parameters to Adjust (If Necessary)**
-| Parameter               | Current Value | What It Affects                       |
-| ----------------------- | ------------- | ------------------------------------- |
-| `n_mfcc`                | 13            | Number of MFCC coefficients extracted |
-| `n_fft` (frame size)    | 25 ms         | Frequency resolution                  |
-| `hop_length`            | 10 ms         | Temporal resolution                   |
-| `n_mels`                | 40            | Smoothing of frequency bands          |
-| `top_db` (silence trim) | 20 dB         | Aggressiveness of silence removal     |
+2. **Noise-Robust Processing**  
+   - Aggressive spectral gating reduces environmental noise contamination
+   - Adaptive trimming ensures clean voice segments for analysis
+
+3. **Temporal Dynamics**  
+   Δ and Δ² coefficients model voice changes over time - critical for detecting subtle pathology progression
+
+4. **Quality Control**  
+   Embedded SNR and duration metrics enable intelligent data filtering:
+   ```python
+   df = df[df.processed_duration > 0.5]  # Filter short recordings
+   df = df[df.snr_db > 15]               # Filter low-quality samples
+   ```
+
+5. **Longitudinal Readiness**  
+   Native support for time-series analysis through:
+   - Automatic date parsing from filenames
+   - Patient-ID tracking
+   - Processing parameter versioning
+
+## Future Directions
+
+1. **Real-Time Processing**  
+   Web interface for instant voice analysis
+
+2. **Deep Learning Integration**  
+   TensorFlow/Keras ready feature format
+
+3. **Multimodal Fusion**  
+   Combine with clinical data via:
+   ```python
+   merged_data = pd.merge(features_df, clinical_df, on=["patient_id", "date"])
+   ```
+
+## License
+
+MIT License - See [LICENSE](LICENSE) for details
