@@ -1,3 +1,5 @@
+# This version of README is no longer valid.
+
 - This project is designed to work with **Python 3.12** only.
 - Running it with any other version of Python may cause compatibility issues with dependencies.
 
