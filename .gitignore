@@ -1,11 +1,7 @@
-# Ignore data files
+# Ignore data files, Python cache, virtual environment files
 data/
 *.wav
-
-# Ignore Python cache
 __pycache__/
 *.pyc
-
-# Ignore virtual environment files
 .env
 venv/
