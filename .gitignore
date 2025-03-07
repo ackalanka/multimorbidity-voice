@@ -1,5 +1,5 @@
 # Ignore data files
-datasets/
+data/
 *.wav
 
 # Ignore Python cache
