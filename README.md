@@ -1,118 +1,214 @@
-- This project is designed to work with **Python 3.12** only.
+- This project is designed to work with Python 3.12 only.
 - Running it with any other version of Python may cause compatibility issues with dependencies.
+
 # Voice Biomarker Extraction Pipeline
 
-A robust audio processing pipeline for extracting Mel-Frequency Cepstral Coefficients (MFCCs) from voice recordings, optimized for medical machine learning research.
+A comprehensive toolkit for extracting acoustic features from voice recordings, optimized for medical machine learning research
 
-## Key Features
+![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-- **Advanced Audio Preprocessing**  
-  Noise reduction, spectral normalization, and adaptive voice activity detection
-- **Comprehensive MFCC Extraction**  
-  13 coefficients with 10 statistical measures per coefficient
-- **Temporal Feature Analysis**  
-  Delta and delta-delta coefficients for voice dynamics
-- **Quality Control Metrics**  
-  SNR estimation, duration tracking, and processing validation
-- **Scalable Architecture**  
-  Parallel processing for large datasets
-- **Research-Ready Output**  
-  CSV format with embedded metadata for longitudinal studies
+## Table of Contents
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Technical Specifications](#technical-specifications)
+- [Data Requirements](#data-requirements)
+- [Output Format](#output-format)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
+- [Contact](#contact)
 
-## Technical Specifications
+## Features
 
-| Component              | Details                                                                 |
-|------------------------|-------------------------------------------------------------------------|
-| MFCC Parameters        | 13 coefficients, 128 mel bands, 50-8000Hz range                        |
-| Preprocessing          | Noise reduction (spectral gating), pre-emphasis (0.97), peak normalization |
-| Temporal Features      | Δ (delta) and Δ² (delta-delta) coefficients                            |
-| Statistical Features   | Mean, variance, median, min/max, range, std, kurtosis, skewness, ZCR  |
-| Output Format          | CSV with 143 features per recording + metadata columns                 |
+- **Audio Processing Pipeline**
+  - Automatic voice activity detection
+  - Noise reduction using spectral gating
+  - Pre-emphasis filtering
+  - Signal normalization
+
+- **Feature Extraction**
+  - **MFCC Features** (13 coefficients with delta and delta-delta)
+    - Statistical measures: mean, std, kurtosis, skewness, range
+  - **Prosodic Features** (via Praat/parselmouth)
+    - Fundamental frequency (F0) statistics
+    - Jitter (local, ppq5)
+    - Shimmer (local, apq11)
+    - Harmonic-to-Noise Ratio (HNR)
+    - Formant dispersion
+    - Spectral tilt
+
+- **Advanced Functionality**
+  - Multiprocessing support
+  - Automatic metadata extraction from filenames
+  - Comprehensive error logging
+  - Quality metrics (SNR, duration checks)
+  - CSV output with structured columns
 
 ## Installation
-
+### Steps
+1. Clone repository:
 ```bash
-pip install -r requirements.txt
+git clone https://github.com/ackalanka/multimorbidity-voice
 ```
+
+2. Create virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # Linux/MacOS
+   venv\Scripts\activate    # Windows
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ## Usage
 
-1. Organize WAV files:
-```bash
-input_dir/
-├── patient_001_2024-01-15.wav
-├── patient_002_2024-02-20.wav
-└── ...
-```
+1. **Prepare Input**
+   - Place WAV files in `data/raw` directory
+   - Follow naming convention: `[PatientID]-[DDMMYYYY]-[HH-MM].wav`
 
-2. Run feature extraction:
-```bash
-python mfcc_extractor.py
-```
-
-3. Output CSV contains:
-```csv
-filename,patient_id,recording_date,mfcc_01_mean,...,delta2_mean,snr_db,...
-```
-
-## Audio Preprocessing Pipeline
-
-1. **Noise Reduction**  
-   Spectral gating using first 500ms as noise profile (aggression=1.5)
-   
-2. **Voice Activity Detection**  
-   Conservative trimming (-25dB threshold) with duration validation
-
-3. **Spectral Normalization**  
-   Pre-emphasis filter → Peak normalization → Mel spectrogram conversion
-
-4. **MFCC Extraction**  
-   13 coefficients from 128 mel bands (50-8000Hz)
-
-5. **Feature Engineering**  
-   10 statistical measures + temporal derivatives per coefficient
-
-## Why This Pipeline Excels for ML
-
-1. **Rich Feature Representation**  
-   - 143 engineered features capture both spectral and temporal patterns
-   - Kurtosis/skewness detect non-Gaussian voice characteristics
-   - ZCR (Zero Crossing Rate) enhances time-domain analysis
-
-2. **Noise-Robust Processing**  
-   - Aggressive spectral gating reduces environmental noise contamination
-   - Adaptive trimming ensures clean voice segments for analysis
-
-3. **Temporal Dynamics**  
-   Δ and Δ² coefficients model voice changes over time - critical for detecting subtle pathology progression
-
-4. **Quality Control**  
-   Embedded SNR and duration metrics enable intelligent data filtering:
-   ```python
-   df = df[df.processed_duration > 0.5]  # Filter short recordings
-   df = df[df.snr_db > 15]               # Filter low-quality samples
+2. **Run Feature Extraction**:
+   ```bash
+   python scripts/extractor_v2.py
    ```
 
-5. **Longitudinal Readiness**  
-   Native support for time-series analysis through:
-   - Automatic date parsing from filenames
-   - Patient-ID tracking
-   - Processing parameter versioning
+3. **Output**:
+   - Results saved to `voice_features.csv`
+   - Logs stored in `feature_extraction.log`
 
-## Future Directions
+## Configuration
 
-1. **Real-Time Processing**  
-   Web interface for instant voice analysis
+Modify these parameters in `extractor_v2.py`:
 
-2. **Deep Learning Integration**  
-   TensorFlow/Keras ready feature format
+| Parameter                      | Default Value     | Description                          |
+|--------------------------------|-------------------|--------------------------------------|
+| `INPUT_DIR`                    | `data/raw`        | Input directory for WAV files        |
+| `OUTPUT_CSV`                   | `voice_features.csv` | Output CSV file name             |
+| `SAMPLE_RATE`                  | 16000             | Target sampling rate                 |
+| `N_MFCC`                       | 13                | Number of MFCC coefficients          |
+| `NOISE_REDUCTION_AGGRESSION`   | 1.5               | Noise reduction intensity (0-2)      |
+| `MIN_VOICE_DURATION`           | 0.5               | Minimum valid voice duration (sec)   |
 
-3. **Multimodal Fusion**  
-   Combine with clinical data via:
-   ```python
-   merged_data = pd.merge(features_df, clinical_df, on=["patient_id", "date"])
+## Technical Specifications
+
+### Audio Processing
+- **Resampling**: Librosa's resampling with anti-aliasing
+- **Noise Reduction**: Spectral gating via noisereduce
+- **MFCC Parameters**:
+  - 40 mel bands (50-8000 Hz)
+  - 2048-point FFT with 512 hop length
+  - Pre-emphasis coefficient: 0.97
+
+### Praat Features
+| Feature Category      | Specific Measures                          |
+|-----------------------|--------------------------------------------|
+| Fundamental Frequency | Mean, STD, Entropy (quantile-based)        |
+| Perturbation          | Jitter (local, ppq5), Shimmer (local, apq11)|
+| Spectral              | HNR, Formant Dispersion, Spectral Tilt     |
+
+## Data Requirements
+
+### Input Format
+- 16-bit PCM WAV files
+- Mono channel
+- Recommended duration: 1-5 seconds
+- Sample rate: ≥16kHz
+
+### File Naming Convention
+`[PatientID]-[DDMMYYYY]-[HH-MM].wav`  
+Example: `PT123-01012023-09-30.wav`
+
+## Output Format
+
+CSV file with columns:
+
+- **Metadata**
+  - patient_id, recording_date, recording_time
+  - filename, original_duration, processed_duration
+
+- **MFCC Features**
+  - mfcc_01_mean to mfcc_13_range (65 columns)
+  - delta_01_mean to delta2_13_range (130 columns)
+
+- **Prosodic Features**
+  - f0_mean, f0_std, f0_entropy
+  - jitter_local, jitter_ppq5
+  - shimmer_local, shimmer_apq11
+  - hnr_praat, formant_dispersion, spectral_tilt
+
+- **Quality Metrics**
+  - snr_db, trim_start, trim_end
+  - parselmouth_status, praat_errors
+
+## Troubleshooting
+
+**Common Issues**:
+1. **No WAV files found**
+   - Verify files are in `data/raw`
+   - Check file extensions (.wav, lowercase)
+
+2. **Praat Command Errors**
+   - Ensure minimum audio duration (0.3s after trimming)
+   - Check for silent/quiet recordings
+
+3. **Memory Issues**
+   - Reduce number of parallel processes
+   - Use `cpu_count()//2` in Pool initialization
+
+**Logging**:
+- Detailed logs in `feature_extraction.log`
+- Set logging level in code for debugging:
+  ```python
+  logging.basicConfig(level=logging.DEBUG, ...)
+  ```
+
+## Contributing
+
+We welcome contributions! Please follow these guidelines:
+
+1. **Reporting Issues**
+   - Use GitHub Issues template
+   - Include error logs and sample file if possible
+
+2. **Feature Requests**
+   - Describe use case and proposed implementation
+
+3. **Development**:
+   ```bash
+   git checkout -b feature/your-feature
+   # Make changes
+   pytest tests/  # Add tests for new features
+   git push origin feature/your-feature
    ```
+
+**Coding Standards**:
+- PEP8 compliance
+- Type hints for public functions
+- Docstrings for all modules
+- Unit tests for core functionality
 
 ## License
 
-MIT License - See [LICENSE](LICENSE) for details
+MIT License - See [LICENSE](LICENSE) for details.
+
+## Acknowledgments
+
+- **Librosa** for MFCC extraction
+- **Parselmouth** for Praat integration
+- **noisereduce** for audio cleaning
+
+## Contact
+
+**Akalanka Ranasinghe**  
+- GitHub: [@ackalanka](https://github.com/ackalanka)  
+- Email: akalankar98@gmail.com  
+
+---
+
+**Note**: Clinical validation required for diagnostic use. This tool is intended for research purposes only.
