@@ -1,4 +1,3 @@
-# everything works!
 from typing import Dict, Optional
 import os
 import re
@@ -145,32 +144,70 @@ def extract_parselmouth_features(y: np.ndarray, sr: int) -> Dict:
     return {}
 
 def parse_filename_metadata(filename: str) -> Dict:
-    """Extract metadata from filename"""
+    """Extract metadata from filenames in the format: ID-Gender-Age-Date-Time.wav"""
     metadata = {
         "patient_id": "unknown",
+        "gender": None,
+        "age": None,
         "recording_date": None,
-        "recording_time": None
+        "recording_time": None,
+        "filename_error": None
     }
     
     try:
-        pattern = r"^(.*?)-(\d{8})-(\d{1,2}-\d{2})\.wav$"
+        # Expected format: 2303-F-30-29.11.2023-20-08.wav
+        pattern = r"^(?P<patient_id>\d+)-(?P<gender>[FM])-(?P<age>\d+)-(?P<date>\d{2}\.\d{2}\.\d{4})-(?P<hour>\d{2})-(?P<minute>\d{2})\.wav$"
+        
         match = re.match(pattern, filename)
         
         if match:
-            metadata["patient_id"] = match.group(1)
-            date_str = match.group(2)
-            time_str = match.group(3).replace("-", ":")
+            groups = match.groupdict()
             
-            metadata["recording_date"] = datetime.strptime(
-                date_str, "%d%m%Y"
-            ).strftime("%Y-%m-%d")
+            # Extract basic info
+            metadata["patient_id"] = groups["patient_id"]
+            metadata["gender"] = groups["gender"]
             
-            metadata["recording_time"] = datetime.strptime(
-                time_str, "%H:%M"
-            ).strftime("%H:%M:%S")
+            # Validate and parse age
+            try:
+                metadata["age"] = int(groups["age"])
+                if not (0 <= metadata["age"] <= 120):
+                    raise ValueError("Age out of reasonable range")
+            except ValueError as e:
+                metadata["filename_error"] = f"Invalid age: {str(e)}"
+                logging.warning(f"Age parsing error in {filename}: {str(e)}")
+            
+            # Parse date (DD.MM.YYYY)
+            try:
+                metadata["recording_date"] = datetime.strptime(
+                    groups["date"], "%d.%m.%Y"
+                ).strftime("%Y-%m-%d")
+            except ValueError as e:
+                metadata["filename_error"] = f"Invalid date: {str(e)}"
+                logging.warning(f"Date parsing error in {filename}: {str(e)}")
+            
+            # Parse time (HH-MM)
+            try:
+                time_str = f"{groups['hour']}:{groups['minute']}"
+                metadata["recording_time"] = datetime.strptime(
+                    time_str, "%H:%M"
+                ).strftime("%H:%M:%S")
+            except ValueError as e:
+                metadata["filename_error"] = f"Invalid time: {str(e)}"
+                logging.warning(f"Time parsing error in {filename}: {str(e)}")
+            
+            # Additional validations
+            if metadata["gender"] not in ["F", "M"]:
+                metadata["filename_error"] = "Invalid gender code"
+                logging.warning(f"Invalid gender in {filename}")
+                
+        else:
+            metadata["filename_error"] = "Filename pattern mismatch"
+            logging.warning(f"Filename pattern mismatch: {filename}")
             
     except Exception as e:
-        logging.warning(f"Metadata parsing failed for {filename}: {str(e)}")
+        error_msg = f"Unexpected error: {str(e)[:100]}"
+        metadata["filename_error"] = error_msg
+        logging.error(f"Metadata parsing failed for {filename}: {error_msg}", exc_info=True)
     
     return metadata
 
@@ -303,7 +340,7 @@ def main():
             
             # Define desired column groups
             column_groups = [
-                ['patient_id', 'recording_date', 'recording_time', 'filename',
+                ['patient_id', 'gender', 'age', 'recording_date', 'recording_time', 'filename',
                  'original_duration', 'processed_duration'],
                 [c for c in df.columns if c.startswith('mfcc')],
                 [c for c in df.columns if c.startswith('delta')],
