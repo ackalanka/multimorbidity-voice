@@ -121,8 +121,34 @@ Modify these parameters in `extractor_v2.py`:
 - Sample rate: ≥16kHz
 
 ### File Naming Convention
-`[PatientID]-[DDMMYYYY]-[HH-MM].wav`  
-Example: `PT123-01012023-09-30.wav`
+
+The script automatically extracts structured metadata from each .wav filename based on a specific naming convention. This metadata is critical for downstream analysis and supervised learning (e.g., grouping by gender or age).
+
+#### Expected Filename Format: 
+```
+<ID>-<Gender>-<Age>-<DD.MM.YYYY>-<HH>-<MM>.wav
+```
+
+#### Example: 
+```
+2303-F-30-29.11.2023-20-08.wav
+```
+
+#### Parsed Metadata Fields:
+
+| Field            | Description                                       |
+| ---------------- | ------------------------------------------------- |
+| `patient_id`     | Numeric identifier of the participant             |
+| `gender`         | Participant gender (`F` for female, `M` for male) |
+| `age`            | Age in years (validated to be within 0–120)       |
+| `recording_date` | Date in ISO format (e.g., `2023-11-29`)           |
+| `recording_time` | Time in 24-hour format (e.g., `20:08:00`)         |
+
+#### Validation and Error Handling
+
+- **Pattern mismatch**: Filenames that do not conform to the expected structure are flagged.
+- **Invalid values**: Incorrect age, date, or time values are logged, and an optional `filename_error` field is added for diagnostics.
+- **Logging**: All issues are written to the log file and shown in the console during processing.
 
 ## Output Format
 
