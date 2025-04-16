@@ -142,8 +142,8 @@ def parselmouth_safe(func):
 def extract_parselmouth_features(y: np.ndarray, sr: int) -> Dict:
     """Praat feature extraction handler"""
     return {}
-
-def parse_filename_metadata(filename: str) -> Dict:
+# Edited the following function to recognize new file name convention
+def parse_filename_metadata(filename: str) -> Dict: 
     """Extract metadata from filenames in the format: ID-Gender-Age-Date-Time.wav"""
     metadata = {
         "patient_id": "unknown",
