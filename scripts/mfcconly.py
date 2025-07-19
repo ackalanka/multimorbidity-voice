@@ -6,23 +6,18 @@ import pandas as pd
 import librosa
 import logging
 import noisereduce as nr
-import parselmouth
 from datetime import datetime
 from multiprocessing import Pool, cpu_count
 from scipy.stats import kurtosis, skew
-from parselmouth.praat import call
-from functools import wraps
 
 # Configuration
 INPUT_DIR = r"C:\Users\Akalanka\Desktop\multimorbidity_voice\data\raw"
 OUTPUT_CSV = "voice_features.csv"
 SAMPLE_RATE = 16000
-N_MFCC = 13
+N_MFCC = 72
 
 # Processing Parameters
-USE_PARSELMOUTH = True
 MIN_VOICE_DURATION = 0.5
-MIN_PARSELMOUTH_DURATION = 0.3
 NOISE_REDUCTION_AGGRESSION = 1.5
 
 # Configure logging
@@ -35,113 +30,6 @@ logging.basicConfig(
     ]
 )
 
-def calculate_formant_dispersion(formant):
-    """Calculate formant dispersion using first three formants"""
-    try:
-        f1 = call(formant, "Get mean", 1, 0, 0, "Hertz")
-        f2 = call(formant, "Get mean", 2, 0, 0, "Hertz")
-        f3 = call(formant, "Get mean", 3, 0, 0, "Hertz")
-        return ((f2 - f1) + (f3 - f2)) / 2
-    except Exception as e:
-        logging.debug(f"Formant dispersion error: {str(e)}")
-        return None
-import scipy.stats   
-def calculate_spectral_tilt(sound):
-    """Compute spectral tilt by fitting a regression line to the log power spectrum."""
-    try:
-        spectrum = call(sound, "To Spectrum", "yes")  # Convert to spectrum
-        freqs = np.array([call(spectrum, "Get frequency from bin number", i) for i in range(1, 100)])  # First 100 bins
-        powers = np.array([call(spectrum, "Get real value in bin", i) for i in range(1, 100)])
-
-        # Convert power to dB (log scale)
-        log_powers = np.log10(np.maximum(powers, 1e-10))  # Prevent log(0) error
-
-        # Fit linear regression (spectral tilt = slope of this line)
-        slope, _, _, _, _ = scipy.stats.linregress(freqs, log_powers)
-        return slope  # Spectral tilt (dB/Hz)
-    
-    except Exception as e:
-        logging.debug(f"Spectral tilt error: {str(e)}")
-        return None   
-
-PARSELMOUTH_FEATURES = {
-    # Jitter features
-    'jitter_local': lambda pp: call(pp, "Get jitter (local)", 0, 0, 0.001, 0.02, 1.3),
-    'jitter_ppq5': lambda pp: call(pp, "Get jitter (ppq5)", 0, 0, 0.001, 0.02, 1.3),
-    
-    # Shimmer features (corrected argument structure)
-    'shimmer_local': lambda s, pp: call([s, pp], "Get shimmer (local)", 0, 0, 0.001, 0.02, 1.3, 1.6),
-    'shimmer_apq11': lambda s, pp: call([s, pp], "Get shimmer (apq11)", 0, 0, 0.001, 0.02, 1.3, 1.6),
-    
-    # Pitch features
-    'f0_mean': lambda p: call(p, "Get mean", 0, 0, "Hertz"),
-    'f0_std': lambda p: call(p, "Get standard deviation", 0, 0, "Hertz"),
-    'f0_entropy': lambda p: call(p, "Get quantile", 0, 0, 0.5, "Hertz"),
-    
-    # Harmonicity
-    'hnr_praat': lambda h: call(h, "Get mean", 0, 0),
-    
-    # Formant features
-    'formant_dispersion': lambda f: calculate_formant_dispersion(f),
-    
-    # Spectral features (corrected spectrum handling)
-    'spectral_tilt': lambda s: calculate_spectral_tilt(s)
-}
-
-def parselmouth_safe(func):
-    """Decorator for robust Praat feature extraction"""
-    @wraps(func)
-    def wrapper(y: np.ndarray, sr: int) -> Dict:
-        features = {'parselmouth_status': 'success', 'praat_errors': {}}
-        if y.size < sr * MIN_PARSELMOUTH_DURATION:
-            return {k: None for k in PARSELMOUTH_FEATURES} | features
-            
-        try:
-            # Create Praat objects
-            sound = parselmouth.Sound(y, sampling_frequency=sr)
-            pitch = call(sound, "To Pitch", 0.0, 75, 600)
-            point_process = call(sound, "To PointProcess (periodic, cc)", 75, 600)
-            harmonicity = call(sound, "To Harmonicity (cc)", 0.01, 500, 0.1, 1.0)
-            formant = call(sound, "To Formant (burg)", 0.0025, 5, 5000, 0.025, 50)
-
-            # Extract features with proper object passing
-            for name, extractor in PARSELMOUTH_FEATURES.items():
-                try:
-                    if name in ['jitter_local', 'jitter_ppq5']:
-                        features[name] = extractor(point_process)
-                    elif name in ['shimmer_local', 'shimmer_apq11']:
-                        features[name] = extractor(sound, point_process)
-                    elif name in ['f0_mean', 'f0_std', 'f0_entropy']:
-                        features[name] = extractor(pitch)
-                    elif name == 'hnr_praat':
-                        features[name] = extractor(harmonicity)
-                    elif name == 'formant_dispersion':
-                        features[name] = extractor(formant)
-                    elif name == 'spectral_tilt':
-                        features[name] = extractor(sound)
-                    else:
-                        features[name] = None
-                except Exception as e:
-                    features[name] = None
-                    error_msg = str(e).split("\n")[0][:100]
-                    features['praat_errors'][name] = error_msg.strip()
-                    features['parselmouth_status'] = 'partial_success'
-
-            if all(v is None for v in features.values() if isinstance(v, float)):
-                features['parselmouth_status'] = 'failed'
-                
-        except Exception as e:
-            features.update({k: None for k in PARSELMOUTH_FEATURES})
-            features['parselmouth_status'] = f'failed: {str(e)[:100]}'
-            logging.error(f"Praat processing failed: {str(e)}")
-            
-        return features
-    return wrapper
-
-@parselmouth_safe
-def extract_parselmouth_features(y: np.ndarray, sr: int) -> Dict:
-    """Praat feature extraction handler"""
-    return {}
 # Edited the following function to recognize new file name convention
 def parse_filename_metadata(filename: str) -> Dict: 
     """Extract metadata from filenames in the format: ID-Gender-Age-Date-Time.wav"""
@@ -298,11 +186,6 @@ def process_audio_file(file_path: str) -> Optional[Dict]:
             "trim_end": end
         })
 
-        # === Parselmouth Features ===
-        if USE_PARSELMOUTH:
-            praat_features = extract_parselmouth_features(y_trimmed, SAMPLE_RATE)
-            features.update(praat_features)
-
         return features
 
     except Exception as e:
@@ -344,8 +227,7 @@ def main():
                  'original_duration', 'processed_duration'],
                 [c for c in df.columns if c.startswith('mfcc')],
                 [c for c in df.columns if c.startswith('delta')],
-                list(PARSELMOUTH_FEATURES.keys()),
-                ['snr_db', 'trim_start', 'trim_end', 'parselmouth_status', 'praat_errors']
+                ['snr_db', 'trim_start', 'trim_end']
             ]
 
             # Build ordered columns list with existing columns only
@@ -365,8 +247,7 @@ def main():
                 "processed_files": len(final_df),
                 "success_rate": len(final_df)/len(files),
                 "mean_duration": final_df["processed_duration"].mean(),
-                "valid_metadata": (~final_df["patient_id"].str.contains("unknown")).mean(),
-                "praat_success_rate": (final_df['parselmouth_status'] == 'success').mean()
+                "valid_metadata": (~final_df["patient_id"].str.contains("unknown")).mean()
             }
             logging.info(f"Quality Report:\n{pd.Series(quality_report).to_string()}")
         else:
