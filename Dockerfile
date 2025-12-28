@@ -41,6 +41,7 @@ WORKDIR /app
 # Set environment variables for reproducibility
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app/src \
     OPENBLAS_NUM_THREADS=1 \
     MKL_NUM_THREADS=1 \
     OMP_NUM_THREADS=1 \
