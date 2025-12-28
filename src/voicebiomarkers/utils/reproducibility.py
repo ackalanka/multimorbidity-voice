@@ -9,7 +9,7 @@ across different machines and runs.
 import hashlib
 import os
 import platform
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -94,7 +94,7 @@ def get_environment_info() -> dict[str, Any]:
         noisereduce_version = "unknown"
 
     return {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "platform": platform.platform(),
         "python_version": platform.python_version(),
         "numpy_version": np.__version__,
@@ -163,5 +163,5 @@ def create_provenance_record(
         "input_files_count": len(input_files),
         "input_hashes_sample": dict(list(input_hashes.items())[:5]),
         "output_hash": output_hash,
-        "extraction_timestamp": datetime.now(timezone.utc).isoformat(),
+        "extraction_timestamp": datetime.now(UTC).isoformat(),
     }

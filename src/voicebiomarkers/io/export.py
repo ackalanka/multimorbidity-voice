@@ -7,7 +7,7 @@ Generates QC reports.
 """
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -74,7 +74,7 @@ def export_qc_report(
     output_path = Path(output_path)
 
     report = {
-        "report_timestamp": datetime.now(timezone.utc).isoformat(),
+        "report_timestamp": datetime.now(UTC).isoformat(),
         "qc_summary": qc_summary,
     }
 

@@ -7,8 +7,8 @@ Provides consistent, structured logging for the pipeline.
 
 import logging
 import sys
+from datetime import UTC
 from pathlib import Path
-from typing import Optional
 
 
 class JsonFormatter(logging.Formatter):
@@ -16,10 +16,10 @@ class JsonFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         import json
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         log_entry = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "level": record.levelname,
             "message": record.getMessage(),
             "module": record.module,
@@ -35,7 +35,7 @@ class JsonFormatter(logging.Formatter):
 
 def setup_logging(
     level: str = "INFO",
-    log_file: Optional[Path] = None,
+    log_file: Path | None = None,
     json_format: bool = False,
 ) -> logging.Logger:
     """

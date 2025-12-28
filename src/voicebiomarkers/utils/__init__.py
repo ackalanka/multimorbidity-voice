@@ -1,11 +1,11 @@
 # voicebiomarkers.utils
 """Utility modules for logging and reproducibility."""
 
-from voicebiomarkers.utils.logging import setup_logging, get_logger
+from voicebiomarkers.utils.logging import get_logger, setup_logging
 from voicebiomarkers.utils.reproducibility import (
-    set_random_seed,
-    get_file_hash,
     get_environment_info,
+    get_file_hash,
+    set_random_seed,
 )
 
 __all__ = [

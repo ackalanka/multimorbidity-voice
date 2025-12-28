@@ -6,7 +6,6 @@ Provides consistent preprocessing for all feature extraction,
 ensuring reproducibility across MFCC and Praat pipelines.
 """
 
-from typing import Tuple
 
 import librosa
 import noisereduce as nr
@@ -24,7 +23,7 @@ from voicebiomarkers.config.constants import (
 )
 
 
-def load_audio(file_path: str, target_sr: int = SAMPLE_RATE) -> Tuple[np.ndarray, int]:
+def load_audio(file_path: str, target_sr: int = SAMPLE_RATE) -> tuple[np.ndarray, int]:
     """
     Load audio file and resample to target sample rate.
 
@@ -94,7 +93,7 @@ def trim_silence(
     top_db: float = VAD_TOP_DB,
     frame_length: int = VAD_FRAME_LENGTH,
     hop_length: int = VAD_HOP_LENGTH,
-) -> Tuple[np.ndarray, int, int]:
+) -> tuple[np.ndarray, int, int]:
     """
     Remove leading and trailing silence using Voice Activity Detection.
 
@@ -155,7 +154,7 @@ def preprocess_audio(
     apply_trimming: bool = True,
     apply_pre_emphasis: bool = False,
     apply_normalization: bool = False,
-) -> Tuple[np.ndarray, dict]:
+) -> tuple[np.ndarray, dict]:
     """
     Complete audio preprocessing pipeline.
 
