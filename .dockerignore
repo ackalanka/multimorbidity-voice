@@ -1,0 +1,47 @@
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Output files (should not be in image)
+output/
+output_test/
+*.csv
+
+# Data files (mounted at runtime)
+data/
+*.wav
+*.mp3
+*.m4a
+
+# Logs
+*.log
+
+# Test artifacts
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Miscellaneous
+.DS_Store
+Thumbs.db

@@ -1,7 +1,53 @@
-# Ignore data files, Python cache, virtual environment files
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+.Python
+*.so
+
+# Virtual Environment
+venv/
+.venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Data files (large, don't commit)
 data/
 *.wav
-__pycache__/
-*.pyc
+*.mp3
+*.m4a
+
+# Output files
+output/
+output_test/
+*.csv
+!requirements*.txt
+
+# Test & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Environment
 .env
-venv/
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Build
+dist/
+build/
+*.egg-info/
