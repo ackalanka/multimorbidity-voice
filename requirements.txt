@@ -8,7 +8,7 @@
 
 # Core audio processing
 librosa==0.10.2.post1
-praat-parselmouth==0.5.0.dev0
+praat-parselmouth==0.4.7
 noisereduce==3.0.3
 soundfile==0.13.1
 audioread==3.0.1
