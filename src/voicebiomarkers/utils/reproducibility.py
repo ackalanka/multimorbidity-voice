@@ -83,12 +83,14 @@ def get_environment_info() -> dict[str, Any]:
 
     try:
         import parselmouth
+
         parselmouth_version = parselmouth.__version__
     except (ImportError, AttributeError):
         parselmouth_version = "unknown"
 
     try:
         import noisereduce
+
         noisereduce_version = noisereduce.__version__
     except (ImportError, AttributeError):
         noisereduce_version = "unknown"
@@ -146,11 +148,7 @@ def create_provenance_record(
     Returns:
         Provenance record dictionary
     """
-    input_hashes = {
-        str(f): get_file_hash(f)
-        for f in input_files
-        if Path(f).exists()
-    }
+    input_hashes = {str(f): get_file_hash(f) for f in input_files if Path(f).exists()}
 
     output_hash = None
     if Path(output_file).exists():

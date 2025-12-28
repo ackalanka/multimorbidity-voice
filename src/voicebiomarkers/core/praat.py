@@ -138,19 +138,31 @@ def _extract_f0_features(pitch, duration: float) -> dict[str, Any]:
             hist = hist[hist > 0]
             features["f0_entropy"] = float(-np.sum(hist * np.log2(hist + 1e-10)))
         else:
-            features.update({
-                "f0_mean": None, "f0_std": None, "f0_min": None,
-                "f0_max": None, "f0_range": None, "f0_iqr": None,
-                "f0_entropy": None,
-            })
+            features.update(
+                {
+                    "f0_mean": None,
+                    "f0_std": None,
+                    "f0_min": None,
+                    "f0_max": None,
+                    "f0_range": None,
+                    "f0_iqr": None,
+                    "f0_entropy": None,
+                }
+            )
 
     except Exception as e:
         logger.debug(f"F0 extraction error: {e}")
-        features.update({
-            "f0_mean": None, "f0_std": None, "f0_min": None,
-            "f0_max": None, "f0_range": None, "f0_iqr": None,
-            "f0_entropy": None,
-        })
+        features.update(
+            {
+                "f0_mean": None,
+                "f0_std": None,
+                "f0_min": None,
+                "f0_max": None,
+                "f0_range": None,
+                "f0_iqr": None,
+                "f0_entropy": None,
+            }
+        )
 
     return features
 
@@ -163,9 +175,7 @@ def _extract_jitter_features(sound, point_process) -> dict[str, Any]:
         features["jitter_local"] = call(
             point_process, "Get jitter (local)", 0, 0, 0.0001, 0.02, 1.3
         )
-        features["jitter_ppq5"] = call(
-            point_process, "Get jitter (ppq5)", 0, 0, 0.0001, 0.02, 1.3
-        )
+        features["jitter_ppq5"] = call(point_process, "Get jitter (ppq5)", 0, 0, 0.0001, 0.02, 1.3)
     except Exception as e:
         logger.debug(f"Jitter extraction error: {e}")
         features["jitter_local"] = None
@@ -273,12 +283,17 @@ def _extract_formant_features(sound) -> dict[str, Any]:
 
     except Exception as e:
         logger.debug(f"Formant extraction error: {e}")
-        features.update({
-            "f1_mean": None, "f1_std": None,
-            "f2_mean": None, "f2_std": None,
-            "f3_mean": None, "f3_std": None,
-            "formant_dispersion": None,
-        })
+        features.update(
+            {
+                "f1_mean": None,
+                "f1_std": None,
+                "f2_mean": None,
+                "f2_std": None,
+                "f3_mean": None,
+                "f3_std": None,
+                "formant_dispersion": None,
+            }
+        )
 
     return features
 
@@ -331,13 +346,15 @@ def _extract_cardiovascular_features(sound, pitch) -> dict[str, Any]:
 
     except Exception as e:
         logger.debug(f"Cardiovascular feature extraction error: {e}")
-        features.update({
-            "voice_tremor": None,
-            "vocal_stability_index": None,
-            "intensity_mean": None,
-            "intensity_std": None,
-            "intensity_range": None,
-            "spectral_tilt": None,
-        })
+        features.update(
+            {
+                "voice_tremor": None,
+                "vocal_stability_index": None,
+                "intensity_mean": None,
+                "intensity_std": None,
+                "intensity_range": None,
+                "spectral_tilt": None,
+            }
+        )
 
     return features

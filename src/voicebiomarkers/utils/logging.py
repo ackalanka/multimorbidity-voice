@@ -59,9 +59,7 @@ def setup_logging(
     if json_format:
         formatter = JsonFormatter()
     else:
-        formatter = logging.Formatter(
-            "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
-        )
+        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(name)s - %(message)s")
 
     # Console handler
     console_handler = logging.StreamHandler(sys.stdout)

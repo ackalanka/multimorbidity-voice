@@ -193,12 +193,14 @@ def preprocess_audio(
         y, trim_start, trim_end = trim_silence(y)
 
     processed_duration = len(y) / sr
-    metadata.update({
-        "processed_duration": processed_duration,
-        "processed_samples": len(y),
-        "trim_start": trim_start,
-        "trim_end": trim_end,
-    })
+    metadata.update(
+        {
+            "processed_duration": processed_duration,
+            "processed_samples": len(y),
+            "trim_start": trim_start,
+            "trim_end": trim_end,
+        }
+    )
 
     # Optional: Pre-emphasis
     if apply_pre_emphasis:

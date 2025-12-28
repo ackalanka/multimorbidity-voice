@@ -83,7 +83,7 @@ def calculate_silence_percentage(
 
     # Calculate RMS energy per frame
     frame_length = int(sample_rate * 0.025)  # 25ms frames
-    hop_length = int(sample_rate * 0.010)    # 10ms hop
+    hop_length = int(sample_rate * 0.010)  # 10ms hop
 
     rms = librosa.feature.rms(
         y=audio,
@@ -166,12 +166,14 @@ def calculate_quality_metrics(
         metrics["qc_unvoiced"] = False
 
     # Overall pass/fail
-    metrics["qc_passed"] = not any([
-        metrics["qc_low_snr"],
-        metrics["qc_clipping"],
-        metrics["qc_mostly_silence"],
-        metrics["qc_unvoiced"],
-    ])
+    metrics["qc_passed"] = not any(
+        [
+            metrics["qc_low_snr"],
+            metrics["qc_clipping"],
+            metrics["qc_mostly_silence"],
+            metrics["qc_unvoiced"],
+        ]
+    )
 
     # List of active flags
     flags = []

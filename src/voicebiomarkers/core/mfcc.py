@@ -172,19 +172,13 @@ def extract_mfcc_features(
     # Calculate statistics for each coefficient
     for i in range(n_mfcc):
         # MFCC statistics (7 features per coefficient)
-        features.update(
-            calculate_coefficient_statistics(mfcc[i], f"mfcc_{i+1:02}")
-        )
+        features.update(calculate_coefficient_statistics(mfcc[i], f"mfcc_{i+1:02}"))
 
         # Delta statistics (5 features per coefficient)
-        features.update(
-            calculate_delta_statistics(delta[i], f"delta_{i+1:02}")
-        )
+        features.update(calculate_delta_statistics(delta[i], f"delta_{i+1:02}"))
 
         # Delta-delta statistics (5 features per coefficient)
-        features.update(
-            calculate_delta_statistics(delta2[i], f"delta2_{i+1:02}")
-        )
+        features.update(calculate_delta_statistics(delta2[i], f"delta2_{i+1:02}"))
 
     # Add extraction metadata
     features["mfcc_extraction_status"] = "success"
